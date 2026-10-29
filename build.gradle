@@ -1,0 +1,92 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.142'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+// 仓库仅用于完整环境下的依赖解析；离线构建时全部依赖都来自 Gradle 缓存与 libs/。
+repositories {
+    mavenCentral()
+    maven { name = 'BlameJared'; url = 'https://maven.blamejared.com' }
+    maven { name = 'IllusiveC4'; url = 'https://maven.theillusivec4.top/' }
+    maven { name = 'Shedaniel'; url = 'https://maven.shedaniel.me/' }
+}
+
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    runs {
+        client {
+            client()
+            programArguments.addAll '--width', '1280', '--height', '720'
+        }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        "${project.mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+dependencies {
+    // 第三方 mod 全部 compileOnly：只参与编译，不进入 mod jar（由整合包提供）。
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
+
+    // 仅本机离线环境需要：缓存的 NeoForm 产物来自一个注册过 AnvilCraft interface injection 的
+    // 参考工程，其 Minecraft 核心类上带有 AnvilCraft 注入接口；javac 解析这些类需要接口类型存在。
+    // 该 stub jar 只在编译期使用、不会打进产物，本 mod 不引用任何 AnvilCraft 类。
+    // 在正常联网环境里重新生成 artifacts 后，这一行可以删除。
+    compileOnly files('tools/anvilcraft-interface-stubs.jar')
+}
+
+// 仅当预构建的 NeoForm 产物已存在时，跳过 createMinecraftArtifacts。
+// 原因：本机 JDK 21.0.11 + NeoFormRuntime 2.0.22 在该节点的 javac 重编译会失败（message=null 的
+// 诊断，见 docs/build-notes.md）。正常环境（可下载/可重新生成 artifacts）下此任务照常执行。
+tasks.matching { it.name == 'createMinecraftArtifacts' }.configureEach {
+    if (file("build/moddev/artifacts/neoforge-${project.neo_version}.jar").exists()) {
+        enabled = false
+    }
+}
+
+tasks.named('processResources', ProcessResources) {
+    inputs.property 'version', project.version
+    // 把 gradle.properties 的 mod_version 注入 neoforge.mods.toml，避免 jar 名与元数据版本不一致
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand(version: project.version)
+    }
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(
+            'Specification-Title'     : project.mod_name,
+            'Specification-Vendor'    : project.mod_authors,
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : project.mod_name,
+            'Implementation-Version'  : project.version,
+            'Implementation-Vendor'   : project.mod_authors
+        )
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

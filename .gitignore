@@ -1,0 +1,38 @@
+# Gradle
+.gradle/
+build/
+run/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+Thumbs.db
+.DS_Store
+
+# 本地第三方依赖 jar（版权归各自作者，不随仓库分发；见 libs/README.md）
+libs/*
+!libs/README.md
+
+# 本地构建/分发包
+dist/
+
+# 离线开发用的生成物（可由 tools/README.md / docs/build-notes.md 重建）
+tools/anvilcraft-interface-stubs.jar
+tools/injection-stubs/classes/
+
+# 本地诊断日志
+docs/lead-*.log
+docs/gradle-home-copy.log
+docs/nfrt-*.txt
+*.log
+
+# 本地环境变量脚本（如需要）
+.env

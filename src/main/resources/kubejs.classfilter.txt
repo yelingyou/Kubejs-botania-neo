@@ -1,0 +1,3 @@
++vazkii.botania.api.**
++vazkii.botania.common.**
++dev.kubejsbotania.neo.**

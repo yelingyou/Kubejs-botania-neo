@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.kubejsbotania.neo.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "TerrestrialAgglomerationPlateBlockEntityMixin"
+  ],
+  "client": [],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
